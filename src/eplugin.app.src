@@ -1,0 +1,13 @@
+{application, eplugin,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  sasl
+                 ]},
+  {mod, { eplugin_app, []}},
+  {env, [{plugin_dir, "plugins"}]}
+ ]}.
