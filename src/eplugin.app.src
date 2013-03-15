@@ -6,7 +6,8 @@
   {applications, [
                   kernel,
                   stdlib,
-                  sasl
+                  sasl,
+                  lager
                  ]},
   {mod, { eplugin_app, []}},
   {env, [{plugin_dir, "plugins"}]}
