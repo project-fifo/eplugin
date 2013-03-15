@@ -7,8 +7,6 @@ usage
 
 Simply start the applicaiton, there is only one configuration variable at the moment named `plugin_dir` which as the name suggets specifies where the plugins are discovered. It defaults to `plugsin`.
 
-From this point on only trhee functions are really of interest: `apply/2`, `callbacks/1`, `config/1`.
-
 apply/2
 -------
 And respectively `apply/1` which is the same as `apply/2` with empty args.
@@ -28,7 +26,6 @@ eplugin:callbacks(my_fancy_callback).
 %% -> [{some_module, some_function}, {some_other_module, some_function}]
  ```
 
-
 config/1
 --------
 Fetches the custom plugin Config. This can is not tied to anything but simply can be used to store whatever plugin config is required.
@@ -36,6 +33,22 @@ Fetches the custom plugin Config. This can is not tied to anything but simply ca
 eplugin:config(my_fancy_callback).
 %% -> {ok, Config}
  ```
+
+plugins/0
+---------
+This function lists all installed plugins.
+
+enable/1
+--------
+Enables a plugin.
+
+disable/1
+---------
+disables a plugin.
+
+is_enabled/1
+------------
+Returns true if a plugin is enabled (aka has any callbacks registered).
 
 Writing plugins
 ===============
@@ -60,3 +73,12 @@ The plugin.conf is a simple file with the following syntax:
  [{Module, [{Callback, Function}]}],
  OptionPlist}.
 ```
+
+The option disabled in the OptionPlist will disable the plugin at load time.
+
+Callbacks
+=========
+eplugin provides the following callbacks itself:
+* eplugin:init - this is called when all modules are compiled. The Plugins config is passed.
+* eplugin:enable - this is called before a module gets enabled.  The Plugins config is passed.
+* eplugin:disable - this gets called after a module gets disabled. The Plugins config is passed.

@@ -11,6 +11,7 @@
          config/1,
          plugins/0,
          enable/1,
+         is_enabled/1,
          disable/1]).
 
 -define(TABLE, plugins).
@@ -30,10 +31,14 @@ discover(Base) ->
     filelib:wildcard(WC).
 
 load(Path) ->
-    [load_plugin(P) || P <- discover(Path)].
+    Res = [load_plugin(P) || P <- discover(Path)],
+    init(),
+    Res.
 
 load() ->
-    [load_plugin(P) || P <- discover()].
+    Res = [load_plugin(P) || P <- discover()],
+    init(),
+    Res.
 
 load_plugin(ConfigFile) ->
     %% Loaded = [{filename:dirname(Plugin), file:consult(Plugin)} || Plugin <- Plugins],
@@ -100,7 +105,7 @@ compile_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
 
 compile_module(Name, Path, Module) ->
     File = filename:join([Path, Module]),
-    lager:info("[eplugin::~p] Compiling moduke ~s", [Name, File]),
+    lager:info("[eplugin::~p] Compiling module ~s", [Name, File]),
     case compile:file(File, [{outdir, Path}]) of
         error ->
             lager:error("[eplugin::~p] Compiling failed.", [Name]),
@@ -141,18 +146,61 @@ config(Plugin) ->
     end.
 
 disable(Plugin) ->
-    lager:info("[eplugin::~p] disabled.", [Plugin]),
-    ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}).
-
-enable(Plugin) ->
-    case ets:lookup(?CONFTABLE, Plugin) of
-        [] ->
-            undefined;
-        [{_, _, Modules}] ->
-            [register_callbacks(Plugin, M) || M <- Modules],
-            ok
+    case is_enabled(Plugin) of
+        true ->
+            lager:info("[eplugin::~p] disabled.", [Plugin]),
+            Callback = ets:match(?TABLE, {'eplugin:disable', Plugin, '$1', '$2'}),
+            ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}),
+            {ok, Config} = config(Plugin),
+            [erlang:apply(M, F, [Config]) || [M, F] <- Callback],
+            ok;
+        false ->
+            lager:warning("[eplugin::~p] already disabled.", [Plugin])
     end.
 
+enable(Plugin) ->
+    case is_enabled(Plugin) of
+        true ->
+            lager:warning("[eplugin::~p] already enabled.", [Plugin]);
+        false ->
+            case ets:lookup(?CONFTABLE, Plugin) of
+                [] ->
+                    undefined;
+                [{_, _, Modules}] ->
+                    {ok, Config} = config(Plugin),
+                    lists:foreach(fun({M, Callbacks}) ->
+                                          lists:foreach(fun({'eplugin:enable', Fun}) ->
+                                                                erlang:apply(M, Fun, [Config]);
+                                                           (_) ->
+                                                                ok
+                                                        end, Callbacks)
+                                  end, Modules),
+                    [register_callbacks(Plugin, M) || M <- Modules],
+                    ok
+            end
+    end.
+
+is_enabled(Plugin) ->
+    case ets:match(?TABLE, {'_', Plugin, '_', '_'}) of
+        [] ->
+            false;
+        _ ->
+            true
+    end.
 
 plugins() ->
     [P || [P] <- ets:match(?CONFTABLE, {'$1', '_', '_'})].
+
+
+init() ->
+    case ets:match(?TABLE, {'eplugin:init', '$1', '$2', '$3'}) of
+        [] ->
+            ok;
+        Inits ->
+            IFn = fun(P, M, F) ->
+                          {ok, Config} = config(P),
+                          erlang:apply(M, F, [Config])
+                  end,
+            [ IFn(P, M, F) || [P, M, F] <- Inits],
+            true
+    end.

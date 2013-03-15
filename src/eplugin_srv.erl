@@ -57,7 +57,6 @@ init([]) ->
     ets:new(?TABLE, [bag, {read_concurrency, true}, named_table, public]),
     ets:new(?CONFTABLE, [set, {read_concurrency, true}, named_table, public]),
     {ok, Dir} = application:get_env(plugin_dir),
-    io:format("Plugin dir is: ~s~n.", [Dir]),
     eplugin:load(Dir),
     {ok, #state{}}.
 
