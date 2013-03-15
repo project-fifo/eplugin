@@ -78,7 +78,16 @@ The option disabled in the OptionPlist will disable the plugin at load time.
 
 Callbacks
 =========
+
+notation
+--------
+callbacks are noted as `<callback name>(arguments)` so `eplugin:init(Config)` means the callback `eplugin:init` is caled with 1 argument - `Config`.
+
+internal callbacks
+------------------
 eplugin provides the following callbacks itself:
-* eplugin:init - this is called when all modules are compiled. The Plugins config is passed.
-* eplugin:enable - this is called before a module gets enabled.  The Plugins config is passed.
-* eplugin:disable - this gets called after a module gets disabled. The Plugins config is passed.
+* eplugin:init(Config) - this is called when all modules are compiled.
+* eplugin:enable(Config) - this is called before a module gets enabled.
+* eplugin:disable(Config) - this gets called after a module gets disabled.
+* eplugin:enable_plugin(Plugin) - this gets called whenever a plugin is enabled.
+* eplugin:disable_plugin(Plugin) - this gets called whenever a plugin is disabled.

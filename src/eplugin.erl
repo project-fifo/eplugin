@@ -153,6 +153,7 @@ disable(Plugin) ->
             ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}),
             {ok, Config} = config(Plugin),
             [erlang:apply(M, F, [Config]) || [M, F] <- Callback],
+            eplugin:apply('eplugin:disable_plugin', [Plugin]),
             ok;
         false ->
             lager:warning("[eplugin::~p] already disabled.", [Plugin])
@@ -176,6 +177,7 @@ enable(Plugin) ->
                                                         end, Callbacks)
                                   end, Modules),
                     [register_callbacks(Plugin, M) || M <- Modules],
+                    eplugin:apply('eplugin:enable_plugin', [Plugin]),
                     ok
             end
     end.
