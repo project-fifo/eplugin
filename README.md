@@ -74,7 +74,11 @@ The plugin.conf is a simple file with the following syntax:
  OptionPlist}.
 ```
 
-The option disabled in the OptionPlist will disable the plugin at load time.
+OptionsPlist has the following reserved options:
+
+* disabled - this plugin will not load.
+* dependencies - a list of dependencies.
+* provides - a list of dependencies the plug provides.
 
 Callbacks
 =========
@@ -86,7 +90,6 @@ callbacks are noted as `<callback name>(arguments)` so `eplugin:init(Config)` me
 internal callbacks
 ------------------
 eplugin provides the following callbacks itself:
-* eplugin:init(Config) - this is called when all modules are compiled.
 * eplugin:enable(Config) - this is called before a module gets enabled.
 * eplugin:disable(Config) - this gets called after a module gets disabled.
 * eplugin:enable_plugin(Plugin) - this gets called whenever a plugin is enabled.
