@@ -185,6 +185,8 @@ load_modules(Name, _Path, []) ->
 
 load_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
     File = filename:join([Path, M]),
+%    code:delete(M),
+%    code:purge(M),
     case code:load_abs(File) of
         {error, Reason} ->
             lager:error("[eplugin::~p] Failed to load module ~p(~s): ~p.", [Name, M, File, Reason]),
@@ -211,7 +213,7 @@ compile_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
 compile_module(Name, Path, Module) ->
     File = filename:join([Path, Module]),
     lager:info("[eplugin::~p] Compiling module ~s", [Name, File]),
-    case compile:file(File, [{outdir, Path}]) of
+    case compile:file(File, [{outdir, Path}, warnings_as_errors]) of
         error ->
             lager:error("[eplugin::~p] Compiling failed.", [Name]),
             {error, unknown};

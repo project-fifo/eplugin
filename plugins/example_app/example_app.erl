@@ -1,6 +1,6 @@
 -module(example_app).
 
--export([start/0]).
+-export([start/1]).
 
-start() ->
-    example_app_app:start([],[]).
+start(_Config) ->
+    example_app_app:start(ok,ok).
