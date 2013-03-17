@@ -70,6 +70,9 @@ is_enabled/1
 ------------
 Returns true if a plugin is enabled (aka has any callbacks registered).
 
+register/4 /5
+-------------
+Registers a callback.
 
 
 Writing plugins
