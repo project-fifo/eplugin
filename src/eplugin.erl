@@ -1,5 +1,7 @@
 -module(eplugin).
 
+-include("eplugin.hrl").
+
 -export([start/0,
          callbacks/1,
          apply/2,
@@ -14,7 +16,6 @@
          provide/1,
          is_enabled/1,
          disable/1]).
-
 
 %% This is a library we don't want xref to spam us with the exported functions.
 -ignore_xref([start/0,
@@ -33,9 +34,6 @@
               disable/1]).
 
 -export_type([plugin_desc/0]).
-
--define(TABLE, plugins).
--define(CONFTABLE, plugin_config).
 
 
 %%--------------------------------------------------------------------

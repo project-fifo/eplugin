@@ -10,6 +10,8 @@
 
 -behaviour(gen_server).
 
+-include("eplugin.hrl").
+
 %% API
 -export([start_link/0]).
 -ignore_xref([start_link/0]).
@@ -18,10 +20,6 @@
          terminate/2, code_change/3]).
 
 -export([provide/1, register_callbacks/2, register_callback/5]).
-
--define(TABLE, plugins).
--define(CONFTABLE, plugin_config).
--define(PROVTABLE, plugin_provided).
 
 -define(SERVER, ?MODULE).
 
