@@ -9,13 +9,33 @@ Simply start the applicaiton, there is only one configuration variable at the mo
 
 apply/2
 -------
-And respectively `apply/1` which is the same as `apply/2` with empty args.
-
 This function can be used to call all the functions that were registered to a certain callback, with the args given as seconds argument.
 
 ```erlang
 eplugin:apply(my_fancy_callback, [1, 2, 3]).
 ```
+
+call/1+
+-------
+This function is a simplification of apply with a fixed number of arguments, this way it gets around using `erlang:apply` internally.
+
+```erlang
+eplugin:apply(my_fancy_callback, [1, 2, 3]) =:= eplugin:call(my_fancy_callback, 1, 2, 3).
+```
+
+fold/2
+------
+This function folds an argument through all callbacks. The first argument is the name the second the Acc0 for the fold.
+
+test_apply/1+
+------
+Threads through the callbacks as long as true is returned, if anything else is returned execution is terminated and this value returned.
+
+test_apply/2  test/1+
+---------------------
+Threads through the callbacks as long as true is returned, if anything else is returned execution is terminated and this value returned.
+
+Naming is according to apply and call.
 
 callbacks/1
 -----------
@@ -50,6 +70,8 @@ is_enabled/1
 ------------
 Returns true if a plugin is enabled (aka has any callbacks registered).
 
+
+
 Writing plugins
 ===============
 A plugin is a directory with a `plugin.conf` file and one or more .erl files so the a plugin directory could look like:
@@ -70,9 +92,12 @@ The plugin.conf is a simple file with the following syntax:
 
 ```erlang
 {PluginName,
- [{Module, [{Callback, Function}]}],
+ [{Module, [{Callback, Function}|{Callback, Function, CallbackOptions}]}],
  OptionPlist}.
 ```
+
+CallbackOptions has the following possbile values
+* priority - the priority for execution order, highest priority first, default is 0
 
 OptionsPlist has the following reserved options:
 

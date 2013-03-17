@@ -3,10 +3,14 @@
 -export([start/0,
          callbacks/1,
          apply/2,
-         apply/1,
+         call/1, call/2, call/3, call/4,
+         apply_test/2,
+         test/1, test/2, test/3, test/4,
+         fold/2,
          config/1,
          plugins/0,
          enable/1,
+         provide/1,
          is_enabled/1,
          disable/1]).
 
@@ -19,13 +23,99 @@ start() ->
     application:start(eplugin).
 
 callbacks(Name) ->
-    [{M, F} || {_, _, M, F} <- ets:lookup(?TABLE, Name)].
+    C0 = [{P, M, F} || {_, _, M, F, P} <- ets:lookup(?TABLE, Name)],
+    [{M, F} || {_, M, F} <- lists:sort(C0)].
 
-apply(Name) ->
-    eplugin:apply(Name, []).
-
-apply(Name, Args) ->
+apply(Name, Args) when is_list(Args) ->
     [erlang:apply(M, F, Args) || {M, F} <- callbacks(Name)].
+
+
+call(Name) ->
+    [M:F() || {M, F} <- callbacks(Name)].
+
+call(Name, Arg) ->
+    [M:F(Arg) || {M, F} <- callbacks(Name)].
+
+call(Name, Arg1, Arg2) ->
+    [M:F(Arg1, Arg2) || {M, F} <- callbacks(Name)].
+
+call(Name, Arg1, Arg2, Arg3) ->
+    [M:F(Arg1, Arg2, Arg3) || {M, F} <- callbacks(Name)].
+
+apply_test(Name, Args) ->
+    apply_test_(callbacks(Name), Args).
+
+apply_test_([], _) ->
+    true;
+
+apply_test_([{M, F} | Cs], Args) ->
+    case erlang:apply(M, F, Args) of
+        true ->
+            apply_test_(Cs, Args);
+        R ->
+            R
+    end.
+
+test(Name) ->
+    test_(callbacks(Name)).
+
+test_([]) ->
+    true;
+
+test_([{M, F} | Cs]) ->
+    case M:F() of
+        true ->
+            test_(Cs);
+        R ->
+            R
+    end.
+
+test(Name, Arg) ->
+    test_(callbacks(Name), Arg).
+
+test_([], _) ->
+    true;
+
+test_([{M, F} | Cs], Arg) ->
+    case M:F(Arg) of
+        true ->
+            test_(Cs, Arg);
+        R ->
+            R
+    end.
+
+test(Name, Arg1, Arg2) ->
+    test_(callbacks(Name), Arg1, Arg2).
+
+test_([], _, _) ->
+    true;
+
+test_([{M, F} | Cs], Arg1, Arg2) ->
+    case M:F(Arg1, Arg2) of
+        true ->
+            test_(Cs, Arg1, Arg2);
+        R ->
+            R
+    end.
+
+test(Name, Arg1, Arg2, Arg3) ->
+    test_(callbacks(Name), Arg1, Arg2, Arg3).
+
+test_([], _, _, _) ->
+    true;
+
+test_([{M, F} | Cs], Arg1, Arg2, Arg3) ->
+    case M:F(Arg1, Arg2, Arg3) of
+        true ->
+            test_(Cs, Arg1, Arg2, Arg3);
+        R ->
+            R
+    end.
+
+fold(Name, Acc0) ->
+    lists:foldl(fun({M, F}, AccIn) ->
+                        M:F(AccIn)
+                end, Acc0, callbacks(Name)).
 
 config(Plugin) ->
     case ets:lookup(?CONFTABLE, Plugin) of
@@ -42,8 +132,8 @@ disable(Plugin) ->
             Callback = ets:match(?TABLE, {'eplugin:disable', Plugin, '$1', '$2'}),
             ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}),
             {ok, Config} = config(Plugin),
-            [erlang:apply(M, F, [Config]) || [M, F] <- Callback],
-            eplugin:apply('eplugin:disable_plugin', [Plugin]),
+            [M:F(Config) || [M, F] <- Callback],
+            eplugin:call('eplugin:disable_plugin', Plugin),
             ok;
         false ->
             lager:warning("[eplugin::~p] already disabled.", [Plugin])
@@ -61,17 +151,18 @@ enable(Plugin) ->
                     {ok, Config} = config(Plugin),
                     lists:foreach(fun({M, Callbacks}) ->
                                           lists:foreach(fun({'eplugin:enable', Fun}) ->
-                                                                erlang:apply(M, Fun, [Config]);
+                                                                M:Fun(Config);
                                                            (_) ->
                                                                 ok
                                                         end, Callbacks)
                                   end, Modules),
                     [eplugin_srv:register_callbacks(Plugin, M) || M <- Modules],
-                    eplugin:apply('eplugin:enable_plugin', [Plugin]),
+                    eplugin:call('eplugin:enable_plugin', Plugin),
                     [eplugin_srv:provide(What) || What <- proplists:get_value(provides, Config, [])],
                     ok
             end
     end.
+
 
 is_enabled(Plugin) ->
     case ets:match(?TABLE, {'_', Plugin, '_', '_'}) of
@@ -83,3 +174,6 @@ is_enabled(Plugin) ->
 
 plugins() ->
     [P || [P] <- ets:match(?CONFTABLE, {'$1', '_', '_'})].
+
+provide(What) ->
+    eplugin_srv:provide(What).

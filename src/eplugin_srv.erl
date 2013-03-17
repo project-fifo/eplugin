@@ -229,11 +229,18 @@ compile_module(Name, Path, Module) ->
     end.
 
 register_callbacks(Name, {Module, Callbacks}) ->
-    [register_callback(Name, Callback, Module, Function) || {Callback, Function} <- Callbacks ].
+    [case C of
+         {Callback, Function, Options} ->
+             register_callback(Name, Callback, Module, Function, Options);
+         {Callback, Function} ->
+             register_callback(Name, Callback, Module, Function, [])
+     end || C <- Callbacks ].
 
-register_callback(Name, Callback, Module, Function) ->
+register_callback(Name, Callback, Module, Function, Options) ->
+    Priority = proplists:get_value(priority, Options, 0),
     lager:info("[eplugin::~p] Registering callback ~p with ~p:~p.", [Name, Callback, Module, Function]),
-    ets:insert(?TABLE, {Callback, Name, Module, Function}).
+    %% To get a propper sorting order we take the negative priority value
+    ets:insert(?TABLE, {Callback, Name, Module, Function, Priority*-1}).
 
 load_config(ConfigFile) ->
     Path = filename:dirname(ConfigFile),
