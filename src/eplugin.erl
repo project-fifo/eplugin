@@ -15,6 +15,23 @@
          is_enabled/1,
          disable/1]).
 
+
+%% This is a library we don't want xref to spam us with the exported functions.
+-ignore_xref([start/0,
+              callbacks/1,
+              apply/2,
+              call/1, call/2, call/3, call/4,
+              apply_test/2,
+              test/1, test/2, test/3, test/4,
+              register/4, register/5,
+              fold/2,
+              config/1,
+              plugins/0,
+              enable/1,
+              provide/1,
+              is_enabled/1,
+              disable/1]).
+
 -export_type([plugin_desc/0]).
 
 -define(TABLE, plugins).
@@ -136,17 +153,17 @@ start() ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Lists all registered and enabled callbacks for a given Name. Sorted
+%% Lists all registered and enabled callbacks for a given Plugin. Sorted
 %% by the <b>priority</b> they were given.
 %%
-%% @spec callbacks(Name::atom()) -> {Module::atom(), Function::atom()}
+%% @spec callbacks(Plugin::atom()) -> {Module::atom(), Function::atom()}
 %% @end
 %%--------------------------------------------------------------------
 
--spec callbacks(Name::atom()) -> {Module::atom(), Function::atom()}.
+-spec callbacks(Plugin::atom()) -> {Module::atom(), Function::atom()}.
 
-callbacks(Name) ->
-    C0 = [{P, M, F} || {_, _, M, F, P} <- ets:lookup(?TABLE, Name)],
+callbacks(Plugin) ->
+    C0 = [{P, M, F} || {_, _, M, F, P} <- ets:lookup(?TABLE, Plugin)],
     [{M, F} || {_, M, F} <- lists:sort(C0)].
 
 %%--------------------------------------------------------------------
@@ -154,14 +171,14 @@ callbacks(Name) ->
 %% An equivalten to erlang:apply/2 for callbacks. All enabled callbacks
 %% as listed by callbacks/1. Results are retunred in an list.
 %%
-%% @spec apply(Name::atom(), Args::[any()]) -> [any()]
+%% @spec apply(Plugin::atom(), Args::[any()]) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
 
--spec apply(Name::atom(), Args::[any()]) -> [any()].
+-spec apply(Plugin::atom(), Args::[any()]) -> [any()].
 
-apply(Name, Args) when is_list(Args) ->
-    [erlang:apply(M, F, Args) || {M, F} <- callbacks(Name)].
+apply(Plugin, Args) when is_list(Args) ->
+    [erlang:apply(M, F, Args) || {M, F} <- callbacks(Plugin)].
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -169,53 +186,53 @@ apply(Name, Args) when is_list(Args) ->
 %% arguments by working around erlang:apply and calling the function
 %% directly.
 %%
-%% @spec call(Name::atom()) -> [any()]
+%% @spec call(Plugin::atom()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
 
--spec call(Name::atom()) -> [any()].
+-spec call(Plugin::atom()) -> [any()].
 
-call(Name) ->
-    [M:F() || {M, F} <- callbacks(Name)].
+call(Plugin) ->
+    [M:F() || {M, F} <- callbacks(Plugin)].
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See call/1.
 %%
-%% @spec call(Name::atom(), Arg::any()) -> [any()]
+%% @spec call(Plugin::atom(), Arg::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
 
--spec call(Name::atom(), Arg::any()) -> [any()].
+-spec call(Plugin::atom(), Arg::any()) -> [any()].
 
-call(Name, Arg) ->
-    [M:F(Arg) || {M, F} <- callbacks(Name)].
+call(Plugin, Arg) ->
+    [M:F(Arg) || {M, F} <- callbacks(Plugin)].
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See call/1.
 %%
-%% @spec call(Name::atom(), Arg1::any(), Arg2::any()) -> [any()]
+%% @spec call(Plugin::atom(), Arg1::any(), Arg2::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
 
--spec call(Name::atom(), Arg1::any(), Arg2::any()) -> [any()].
+-spec call(Plugin::atom(), Arg1::any(), Arg2::any()) -> [any()].
 
-call(Name, Arg1, Arg2) ->
-    [M:F(Arg1, Arg2) || {M, F} <- callbacks(Name)].
+call(Plugin, Arg1, Arg2) ->
+    [M:F(Arg1, Arg2) || {M, F} <- callbacks(Plugin)].
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See call/1.
 %%
-%% @spec call(Name::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()]
+%% @spec call(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
 
--spec call(Name::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()].
+-spec call(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()].
 
-call(Name, Arg1, Arg2, Arg3) ->
-    [M:F(Arg1, Arg2, Arg3) || {M, F} <- callbacks(Name)].
+call(Plugin, Arg1, Arg2, Arg3) ->
+    [M:F(Arg1, Arg2, Arg3) || {M, F} <- callbacks(Plugin)].
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -223,14 +240,14 @@ call(Name, Arg1, Arg2, Arg3) ->
 %% returned, once another value is returned the execution is stopped
 %% and this value returned.
 %%
-%% @spec apply_test(Name::atom(), Args::[any()]) -> true|any()
+%% @spec apply_test(Plugin::atom(), Args::[any()]) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec apply_test(Name::atom(), Args::[any()]) -> true|any().
+-spec apply_test(Plugin::atom(), Args::[any()]) -> true|any().
 
-apply_test(Name, Args) ->
-    apply_test_(callbacks(Name), Args).
+apply_test(Plugin, Args) ->
+    apply_test_(callbacks(Plugin), Args).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -238,71 +255,71 @@ apply_test(Name, Args) ->
 %% arguments by working around erlang:apply and calling the function
 %% directly.
 %%
-%% @spec test(Name::atom()) -> true|any()
+%% @spec test(Plugin::atom()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec test(Name::atom()) -> true|any().
+-spec test(Plugin::atom()) -> true|any().
 
-test(Name) ->
-    test_(callbacks(Name)).
+test(Plugin) ->
+    test_(callbacks(Plugin)).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See test/1.
 %%
-%% @spec test(Name::atom(), Arg::any()) -> true|any()
+%% @spec test(Plugin::atom(), Arg::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec test(Name::atom(), Arg::any()) -> true|any().
+-spec test(Plugin::atom(), Arg::any()) -> true|any().
 
-test(Name, Arg) ->
-    test_(callbacks(Name), Arg).
+test(Plugin, Arg) ->
+    test_(callbacks(Plugin), Arg).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See test/1.
 %%
-%% @spec test(Name::atom(), Arg1::any(), Arg2::any()) -> true|any()
+%% @spec test(Plugin::atom(), Arg1::any(), Arg2::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec test(Name::atom(), Arg1::any(), Arg2::any()) -> true|any().
+-spec test(Plugin::atom(), Arg1::any(), Arg2::any()) -> true|any().
 
-test(Name, Arg1, Arg2) ->
-    test_(callbacks(Name), Arg1, Arg2).
+test(Plugin, Arg1, Arg2) ->
+    test_(callbacks(Plugin), Arg1, Arg2).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% See test/1.
 %%
-%% @spec test(Name::atom(), Arg1::any(),
+%% @spec test(Plugin::atom(), Arg1::any(),
 %%            Arg2::any(), Arg3::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec test(Name::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> true|any().
+-spec test(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> true|any().
 
-test(Name, Arg1, Arg2, Arg3) ->
-    test_(callbacks(Name), Arg1, Arg2, Arg3).
+test(Plugin, Arg1, Arg2, Arg3) ->
+    test_(callbacks(Plugin), Arg1, Arg2, Arg3).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% This function folds <b>Acc0</b> through all callbacks for
-%% <b>Name</b> as returned by callbacks/1. The result of function N is
+%% <b>Plugin</b> as returned by callbacks/1. The result of function N is
 %% passed as argument to function N+1, N0 is passed Acc0.
 %%
-%% @spec fold(Name::atom(), Acc0::any()) -> any()
+%% @spec fold(Plugin::atom(), Acc0::any()) -> any()
 %% @end
 %%--------------------------------------------------------------------
 
--spec fold(Name::atom(), Acc0::any()) -> any().
+-spec fold(Plugin::atom(), Acc0::any()) -> any().
 
-fold(Name, Acc0) ->
+fold(Plugin, Acc0) ->
     lists:foldl(fun({M, F}, AccIn) ->
                         M:F(AccIn)
-                end, Acc0, callbacks(Name)).
+                end, Acc0, callbacks(Plugin)).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -341,6 +358,10 @@ disable(Plugin) ->
     case is_enabled(Plugin) of
         true ->
             lager:info("[eplugin::~p] disabled.", [Plugin]),
+            %% Get all callbacks of this Plugin that are registered for 'eplugin:disable'
+            %% this way we can later call them to let the plugin clean up.
+            %% We should get this data before we actually disable it since we can use
+            %% the registered callbacks table to make our lives easyer.
             Callback = ets:match(?TABLE, {'eplugin:disable', Plugin, '$1', '$2'}),
             ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}),
             {ok, Config} = config(Plugin),
@@ -377,6 +398,8 @@ enable(Plugin) ->
                     undefined;
                 [{_, _, Modules}] ->
                     {ok, Config} = config(Plugin),
+                    %% We look for all functions that are registered to 'eplugin:enable'
+                    %% so we can call them before the plugin is enabled.
                     lists:foreach(fun({M, Callbacks}) ->
                                           lists:foreach(fun({'eplugin:enable', Fun}) ->
                                                                 M:Fun(Config);
@@ -390,7 +413,6 @@ enable(Plugin) ->
                     ok
             end
     end.
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -408,8 +430,8 @@ enable(Plugin) ->
                Module::atom(), Function::atom(),
                Options::callback_config()) -> ok.
 
-register(Name, Callback, Module, Function, Options) ->
-    eplugin_srv:register_callback(Name, Callback, Module, Function, Options).
+register(Plugin, Callback, Module, Function, Options) ->
+    eplugin_srv:register_callback(Plugin, Callback, Module, Function, Options).
 
 %%--------------------------------------------------------------------
 %% @doc

@@ -12,12 +12,12 @@
 
 %% API
 -export([start_link/0]).
-
+-ignore_xref([start_link/0]).
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--export([provide/1, register_callbacks/2]).
+-export([provide/1, register_callbacks/2, register_callback/5]).
 
 -define(TABLE, plugins).
 -define(CONFTABLE, plugin_config).
@@ -235,6 +235,7 @@ register_callbacks(Name, {Module, Callbacks}) ->
          {Callback, Function} ->
              register_callback(Name, Callback, Module, Function, [])
      end || C <- Callbacks ].
+
 
 register_callback(Name, Callback, Module, Function, Options) ->
     Priority = proplists:get_value(priority, Options, 0),
