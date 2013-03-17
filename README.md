@@ -5,14 +5,14 @@ This library intends to provide a simple way to manage plugins for an Erlang app
 usage
 -----
 
-Simply start the application, there is only one configuration variable at the moment named `plugin_dir` which as the name suggests specifies where the plugins are discovered. It defaults to `plugsin`.
+Simply start the application, there is only one configuration variable at the moment named `plugin_dir` which as the name suggests specifies where the plugins are discovered. It defaults to `"plugins"`.
 
 apply/2
 -------
 This function can be used to call all the functions that were registered to a certain callback, with the args given as seconds argument.
 
 ```erlang
-eplugin:apply(my_fancy_callback, [1, 2, 3]).
+eplugin:apply(my_fancy_callÂback, [1, 2, 3]).
 ```
 
 call/1+
@@ -48,7 +48,8 @@ eplugin:callbacks(my_fancy_callback).
 
 config/1
 --------
-Fetches the custom plugin Config. This can is not tied to anything but simply can be used to store whatever plugin config is required.
+Fetches the custom plugin Config. This is holding plugin internal information as well as some used by eplugin.
+
 ```erlang
 eplugin:config(my_fancy_callback).
 %% -> {ok, Config}
@@ -59,7 +60,7 @@ plugins/0
 This function lists all installed plugins.
 
 enable/1
---------
+--------˘
 Enables a plugin.
 
 disable/1
@@ -77,7 +78,7 @@ Registers a callback.
 
 Writing plugins
 ===============
-A plugin is a directory with a `plugin.conf` file and one or more .erl files so the a plugin directory could look like:
+A plugin is a directory with a `plugin.conf` file and one or more .erl files so the plugin directory could look like:
 ```
 -plugins
  -plug1
@@ -99,14 +100,14 @@ The plugin.conf is a simple file with the following syntax:
  OptionPlist}.
 ```
 
-CallbackOptions has the following possbile values
+CallbackOptions has the following possible values
 * priority - the priority for execution order, highest priority first, default is 0
 
 OptionsPlist has the following reserved options:
 
 * disabled - this plugin will not load.
-* dependencies - a list of dependencies.
-* provides - a list of dependencies the plug provides.
+* dependencies - a list of dependencies.¯
+* provides - a list of dependencies the plugin provides.
 
 Callbacks
 =========
@@ -115,7 +116,7 @@ notation
 --------
 callbacks are noted as `<callback name>(arguments)` so `eplugin:init(Config)` means the callback `eplugin:init` is called with 1 argument - `Config`.
 
-internal callbacks
+internal callbacks¯¯
 ------------------
 eplugin provides the following callbacks itself:
 * eplugin:enable(Config) - this is called before a module gets enabled.

@@ -196,7 +196,7 @@ load_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
     end.
 
 compile_modules(Name, _Paht, []) ->
-    lager:info("[eplugin::~p] All modules compiled successfully.", [Name]),
+    lager:info("[eplugin::~p] All modules compiled successfuly.", [Name]),
     ok;
 
 compile_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
@@ -219,10 +219,10 @@ compile_module(Name, Path, Module) ->
             lager:error("[eplugin::~p] Compiling failed. Errors: ~p Warnings: ~p.", [Name, Errors, Warnings]),
             {error, {Errors, Warnings}};
         {ok, ModuleName} ->
-            lager:info("[eplugin::~p] Compiling successfull of ~p.", [Name, ModuleName]),
+            lager:info("[eplugin::~p] Compiling successful of ~p.", [Name, ModuleName]),
             {ok, ModuleName};
         {ok, ModuleName,Warnings} ->
-            lager:info("[eplugin::~p] Compiling successfull of ~p with warnings: ~p.", [Name, ModuleName, Warnings]),
+            lager:info("[eplugin::~p] Compiling successful of ~p with warnings: ~p.", [Name, ModuleName, Warnings]),
             {ok, ModuleName}
     end.
 
