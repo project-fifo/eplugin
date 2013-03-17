@@ -6,6 +6,7 @@
          call/1, call/2, call/3, call/4,
          apply_test/2,
          test/1, test/2, test/3, test/4,
+         register/4, register/5,
          fold/2,
          config/1,
          plugins/0,
@@ -163,6 +164,11 @@ enable(Plugin) ->
             end
     end.
 
+register(Name, Callback, Module, Function) ->
+    register(Name, Callback, Module, Function, []).
+
+register(Name, Callback, Module, Function, Options) ->
+    eplugin_srv:register_callback(Name, Callback, Module, Function, Options).
 
 is_enabled(Plugin) ->
     case ets:match(?TABLE, {'_', Plugin, '_', '_'}) of

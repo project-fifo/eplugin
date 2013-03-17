@@ -1,11 +1,11 @@
 eplugin
 ========
-This library intends to provide a simple way to manage plugins for an erlang application, right now the abstraction is very simple and high level but it is quite flexible.
+This library intends to provide a simple way to manage plugins for an Erlang application, right now the abstraction is very simple and high level but it is quite flexible.
 
 usage
 -----
 
-Simply start the applicaiton, there is only one configuration variable at the moment named `plugin_dir` which as the name suggets specifies where the plugins are discovered. It defaults to `plugsin`.
+Simply start the application, there is only one configuration variable at the moment named `plugin_dir` which as the name suggests specifies where the plugins are discovered. It defaults to `plugsin`.
 
 apply/2
 -------
@@ -110,7 +110,7 @@ Callbacks
 
 notation
 --------
-callbacks are noted as `<callback name>(arguments)` so `eplugin:init(Config)` means the callback `eplugin:init` is caled with 1 argument - `Config`.
+callbacks are noted as `<callback name>(arguments)` so `eplugin:init(Config)` means the callback `eplugin:init` is called with 1 argument - `Config`.
 
 internal callbacks
 ------------------
