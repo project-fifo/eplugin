@@ -167,7 +167,7 @@ compile_plugin(Path, Name, Modules, Config) ->
                 error ->
                     {error, Name};
                 ok ->
-                    ets:insert(?CONFTABLE, {Name, Config, Modules}),
+                    ets:insert(?CONFTABLE, {Name, [{path, Path} | Config], Modules}),
                     case proplists:get_value(disabled, Config) of
                         true ->
                             lager:warning("[eplugin::~p] Disabled.", [Name]);

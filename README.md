@@ -48,7 +48,7 @@ eplugin:callbacks(my_fancy_callback).
 
 config/1
 --------
-Fetches the custom plugin Config. This is holding plugin internal information as well as some used by eplugin.
+Fetches the custom plugin Config. This is holding plugin internal information as well as some used by eplugin.project-fifo.net
 
 ```erlang
 eplugin:config(my_fancy_callback).
@@ -108,7 +108,7 @@ OptionsPlist has the following reserved options:
 * disabled - this plugin will not load.
 * dependencies - a list of dependencies.¯
 * provides - a list of dependencies the plugin provides.
-
+* add path - relative pathes to be added to the loadpath.
 Callbacks
 =========
 

@@ -27,6 +27,7 @@
               register/4, register/5,
               fold/2,
               config/1,
+              provide/1,
               plugins/0,
               enable/1,
               provide/1,
@@ -127,6 +128,7 @@
 
 -type plugin_config() :: {dependencies, [atom()]} |
                          {provides, [atom()]} |
+                         {add_paths, [file:name_all()]}|
                          disabled |
                          atom() |
                          {Key::atom(), Value::any()}.
@@ -350,7 +352,7 @@ config(Plugin) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec disable(Plugin::atom()) -> {error, not_found}|ok.
+-spec disable(Plugin::atom()) -> {error, not_found} | ok.
 
 disable(Plugin) ->
     case is_enabled(Plugin) of
@@ -363,6 +365,13 @@ disable(Plugin) ->
             Callback = ets:match(?TABLE, {'eplugin:disable', Plugin, '$1', '$2'}),
             ets:match_delete(?TABLE, {'_', Plugin, '_', '_'}),
             {ok, Config} = config(Plugin),
+            Base = proplists:get_value(path, Config),
+            case proplists:get_value(add_paths, Config, []) of
+                [] ->
+                    ok;
+                Paths ->
+                    [code:del_path([Base, "/", P]) || P <- Paths]
+            end,
             [M:F(Config) || [M, F] <- Callback],
             eplugin:call('eplugin:disable_plugin', Plugin),
             ok;
@@ -394,8 +403,14 @@ enable(Plugin) ->
             case ets:lookup(?CONFTABLE, Plugin) of
                 [] ->
                     undefined;
-                [{_, _, Modules}] ->
-                    {ok, Config} = config(Plugin),
+                [{_, Config, Modules}] ->
+                    Base = proplists:get_value(path, Config),
+                    case proplists:get_value(add_paths, Config, []) of
+                        [] ->
+                            ok;
+                        Paths ->
+                            code:add_paths([[Base, "/", P] || P <- Paths])
+                    end,
                     %% We look for all functions that are registered to 'eplugin:enable'
                     %% so we can call them before the plugin is enabled.
                     lists:foreach(fun({M, Callbacks}) ->
