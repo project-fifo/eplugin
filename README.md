@@ -12,7 +12,7 @@ apply/2
 This function can be used to call all the functions that were registered to a certain callback, with the args given as seconds argument.
 
 ```erlang
-eplugin:apply(my_fancy_callÂback, [1, 2, 3]).
+eplugin:apply(my_fancy_callback, [1, 2, 3]).
 ```
 
 call/1+
