@@ -239,8 +239,16 @@ register_callbacks(Name, {Module, Callbacks}) ->
              register_callback(Name, Callback, Module, Function, [])
      end || C <- Callbacks ].
 
+-spec register_callback(Name::atom(),
+                        Callback::atom(),
+                        Module::atom(),
+                        Function::atom(),
+                        Options::[proplists:property()]) ->
+                               true.
 
-register_callback(Name, Callback, Module, Function, Options) ->
+register_callback(Name, Callback, Module, Function, Options) when
+      is_atom(Name), is_atom(Callback), is_atom(Module), is_atom(Function),
+      is_list(Options) ->
     Priority = proplists:get_value(priority, Options, 0),
     lager:info("[eplugin::~p] Registering callback ~p with ~p:~p.", [Name, Callback, Module, Function]),
     %% To get a propper sorting order we take the negative priority value

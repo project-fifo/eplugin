@@ -428,7 +428,7 @@ enable(Plugin) ->
 %%--------------------------------------------------------------------
 -spec register(Plugin::atom(), Callback::atom(),
                Module::atom(), Function::atom(),
-               Options::callback_config()) ->
+               Options::[callback_config()]) ->
                       true.
 register(Plugin, Callback, Module, Function, Options) ->
     eplugin_srv:register_callback(Plugin, Callback, Module, Function, Options).
