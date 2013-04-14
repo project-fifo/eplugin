@@ -36,7 +36,6 @@
 
 -export_type([plugin_desc/0]).
 
-
 %%--------------------------------------------------------------------
 %% @type plugin_desc() = {Plugin,
 %%                        Modules,
@@ -49,7 +48,6 @@
 %% Plugin is the name, it should be unique.
 %% @end
 %%--------------------------------------------------------------------
-
 -type plugin_desc() :: {Plugin::atom(),
                         [module_desc()],
                         [plugin_config()]}.
@@ -67,7 +65,6 @@
 %% in your plugin register it here just don't list any callbacks.)
 %% @end
 %%--------------------------------------------------------------------
-
 -type module_desc() :: {Module::atom(), [callback_desc()]}.
 
 %%--------------------------------------------------------------------
@@ -85,7 +82,6 @@
 %% If the Config is ommitted a empty list is taken.
 %% @end
 %%--------------------------------------------------------------------
-
 -type callback_desc() :: {Callback::atom(),
                           Function::atom(),
                           Config::[callback_config()]} |
@@ -100,9 +96,7 @@
 %% priority means the callback gets executed earlery.
 %% @end
 %%--------------------------------------------------------------------
-
 -type callback_config() :: {priority, integer()}.
-
 
 %%--------------------------------------------------------------------
 %% @type plugin_config() = Option
@@ -144,7 +138,6 @@
 %% @spec start() -> ok
 %% @end
 %%--------------------------------------------------------------------
-
 -spec start() -> ok.
 start() ->
     application:start(sasl),
@@ -159,9 +152,8 @@ start() ->
 %% @spec callbacks(Plugin::atom()) -> {Module::atom(), Function::atom()}
 %% @end
 %%--------------------------------------------------------------------
-
--spec callbacks(Plugin::atom()) -> {Module::atom(), Function::atom()}.
-
+-spec callbacks(Plugin::atom()) ->
+                       [{Module::atom(), Function::atom()}].
 callbacks(Plugin) ->
     C0 = [{P, M, F} || {_, _, M, F, P} <- ets:lookup(?TABLE, Plugin)],
     [{M, F} || {_, M, F} <- lists:sort(C0)].
@@ -174,9 +166,8 @@ callbacks(Plugin) ->
 %% @spec apply(Plugin::atom(), Args::[any()]) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
-
--spec apply(Plugin::atom(), Args::[any()]) -> [any()].
-
+-spec apply(Plugin::atom(), Args::[any()]) ->
+                   [any()].
 apply(Plugin, Args) when is_list(Args) ->
     [erlang:apply(M, F, Args) || {M, F} <- callbacks(Plugin)].
 
@@ -189,9 +180,8 @@ apply(Plugin, Args) when is_list(Args) ->
 %% @spec call(Plugin::atom()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
-
--spec call(Plugin::atom()) -> [any()].
-
+-spec call(Plugin::atom()) ->
+                  [any()].
 call(Plugin) ->
     [M:F() || {M, F} <- callbacks(Plugin)].
 
@@ -202,9 +192,8 @@ call(Plugin) ->
 %% @spec call(Plugin::atom(), Arg::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
-
--spec call(Plugin::atom(), Arg::any()) -> [any()].
-
+-spec call(Plugin::atom(), Arg::any()) ->
+                  [any()].
 call(Plugin, Arg) ->
     [M:F(Arg) || {M, F} <- callbacks(Plugin)].
 
@@ -215,9 +204,8 @@ call(Plugin, Arg) ->
 %% @spec call(Plugin::atom(), Arg1::any(), Arg2::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
-
--spec call(Plugin::atom(), Arg1::any(), Arg2::any()) -> [any()].
-
+-spec call(Plugin::atom(), Arg1::any(), Arg2::any()) ->
+                  [any()].
 call(Plugin, Arg1, Arg2) ->
     [M:F(Arg1, Arg2) || {M, F} <- callbacks(Plugin)].
 
@@ -228,9 +216,8 @@ call(Plugin, Arg1, Arg2) ->
 %% @spec call(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()]
 %% @end
 %%--------------------------------------------------------------------
-
--spec call(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> [any()].
-
+-spec call(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) ->
+                  [any()].
 call(Plugin, Arg1, Arg2, Arg3) ->
     [M:F(Arg1, Arg2, Arg3) || {M, F} <- callbacks(Plugin)].
 
@@ -243,8 +230,9 @@ call(Plugin, Arg1, Arg2, Arg3) ->
 %% @spec apply_test(Plugin::atom(), Args::[any()]) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec apply_test(Plugin::atom(), Args::[any()]) -> true|any().
+-spec apply_test(Plugin::atom(), Args::[any()]) ->
+                        true |
+                        any().
 
 apply_test(Plugin, Args) ->
     apply_test_(callbacks(Plugin), Args).
@@ -258,9 +246,9 @@ apply_test(Plugin, Args) ->
 %% @spec test(Plugin::atom()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec test(Plugin::atom()) -> true|any().
-
+-spec test(Plugin::atom()) ->
+                  true |
+                  any().
 test(Plugin) ->
     test_(callbacks(Plugin)).
 
@@ -284,9 +272,9 @@ test(Plugin, Arg) ->
 %% @spec test(Plugin::atom(), Arg1::any(), Arg2::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec test(Plugin::atom(), Arg1::any(), Arg2::any()) -> true|any().
-
+-spec test(Plugin::atom(), Arg1::any(), Arg2::any()) ->
+                  true |
+                  any().
 test(Plugin, Arg1, Arg2) ->
     test_(callbacks(Plugin), Arg1, Arg2).
 
@@ -298,8 +286,9 @@ test(Plugin, Arg1, Arg2) ->
 %%            Arg2::any(), Arg3::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec test(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) -> true|any().
+-spec test(Plugin::atom(), Arg1::any(), Arg2::any(), Arg3::any()) ->
+                  true |
+                  any().
 
 test(Plugin, Arg1, Arg2, Arg3) ->
     test_(callbacks(Plugin), Arg1, Arg2, Arg3).
@@ -313,9 +302,8 @@ test(Plugin, Arg1, Arg2, Arg3) ->
 %% @spec fold(Plugin::atom(), Acc0::any()) -> any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec fold(Plugin::atom(), Acc0::any()) -> any().
-
+-spec fold(Plugin::atom(), Acc0::any()) ->
+                  any().
 fold(Plugin, Acc0) ->
     lists:foldl(fun({M, F}, AccIn) ->
                         M:F(AccIn)
@@ -329,9 +317,9 @@ fold(Plugin, Acc0) ->
 %% @spec config(Plugin::atom()) -> undefined|any()
 %% @end
 %%--------------------------------------------------------------------
-
--spec config(Plugin::atom()) -> undefined|plugin_config().
-
+-spec config(Plugin::atom()) ->
+                    undefined |
+                    plugin_config().
 config(Plugin) ->
     case ets:lookup(?CONFTABLE, Plugin) of
         [] ->
@@ -351,9 +339,9 @@ config(Plugin) ->
 %% @spec disable(Plugin::atom()) -> {error, not_found}|ok
 %% @end
 %%--------------------------------------------------------------------
-
--spec disable(Plugin::atom()) -> {error, not_found} | ok.
-
+-spec disable(Plugin::atom()) ->
+                     {error, not_found} |
+                     ok.
 disable(Plugin) ->
     case is_enabled(Plugin) of
         true ->
@@ -391,9 +379,9 @@ disable(Plugin) ->
 %% @spec enable(Plugin::atom()) -> {error, not_found}|ok
 %% @end
 %%--------------------------------------------------------------------
-
--spec enable(Plugin::atom()) -> {error, not_found}|ok.
-
+-spec enable(Plugin::atom()) ->
+                    {error, not_found} |
+                    ok.
 enable(Plugin) ->
     case is_enabled(Plugin) of
         true ->
@@ -438,11 +426,10 @@ enable(Plugin) ->
 %%                Options::callback_config()) -> ok
 %% @end
 %%--------------------------------------------------------------------
-
 -spec register(Plugin::atom(), Callback::atom(),
                Module::atom(), Function::atom(),
-               Options::callback_config()) -> ok.
-
+               Options::callback_config()) ->
+                      true.
 register(Plugin, Callback, Module, Function, Options) ->
     eplugin_srv:register_callback(Plugin, Callback, Module, Function, Options).
 
@@ -454,10 +441,9 @@ register(Plugin, Callback, Module, Function, Options) ->
 %%                Module::atom(), Function::atom()) -> ok
 %% @end
 %%--------------------------------------------------------------------
-
 -spec register(Plugin::atom(), Callback::atom(),
-               Module::atom(), Function::atom()) -> ok.
-
+               Module::atom(), Function::atom()) ->
+                      true.
 register(Plugin, Callback, Module, Function) ->
     register(Plugin, Callback, Module, Function, []).
 
@@ -468,9 +454,8 @@ register(Plugin, Callback, Module, Function) ->
 %% @spec is_enabled(Plugin::atom()) -> true | false
 %% @end
 %%--------------------------------------------------------------------
-
--spec is_enabled(Plugin::atom()) -> true | false.
-
+-spec is_enabled(Plugin::atom()) ->
+                        true | false.
 is_enabled(Plugin) ->
     case ets:match(?TABLE, {'_', Plugin, '_', '_'}) of
         [] ->
@@ -589,10 +574,10 @@ test_([{M, F} | Cs], Arg) ->
 %%             Arg1::any(), Arg2::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
 -spec test_([{Module::atom(), Function::atom()}],
-            Arg1::any(), Arg2::any()) -> true|any().
-
+            Arg1::any(), Arg2::any()) ->
+                   true|
+                   any().
 test_([], _, _) ->
     true;
 
@@ -613,10 +598,10 @@ test_([{M, F} | Cs], Arg1, Arg2) ->
 %%             Arg1::any(), Arg2::any(), Arg3::any()) -> true|any()
 %% @end
 %%--------------------------------------------------------------------
-
 -spec test_([{Module::atom(), Function::atom()}],
-            Arg1::any(), Arg2::any(), Arg3::any()) -> true|any().
-
+            Arg1::any(), Arg2::any(), Arg3::any()) ->
+                   true|
+                   any().
 test_([], _, _, _) ->
     true;
 

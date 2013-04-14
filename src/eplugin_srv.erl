@@ -39,6 +39,8 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+-spec provide(What::atom()) ->
+                     ok.
 provide(What) ->
     gen_server:cast(?SERVER, {provide, What}).
 
@@ -158,6 +160,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
 compile_plugin(Path, Name, Modules, Config) ->
     case compile_modules(Name, Path, Modules) of
         error ->
