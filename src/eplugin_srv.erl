@@ -19,11 +19,11 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--export([provide/1, register_callbacks/2, register_callback/5]).
+-export([provide/1, wait_until_provided/1, register_callbacks/2, register_callback/5]).
 
 -define(SERVER, ?MODULE).
 
--record(state, {pending = [], provided = []}).
+-record(state, {pending = [], provided = [], waiting = []}).
 
 %%%===================================================================
 %%% API
@@ -43,6 +43,10 @@ start_link() ->
                      ok.
 provide(What) ->
     gen_server:cast(?SERVER, {provide, What}).
+
+-spec wait_until_provided(What::atom()) -> ok.
+wait_until_provided(What) ->
+    gen_server:call(?SERVER, {wait_until_provided, What}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -90,6 +94,16 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call({wait_until_provided, What}, From, State = #state{provided = Provided,
+                                                              waiting = Waiting}) ->
+    case ordsets:is_element(What, Provided) of
+        true ->
+            {reply, ok, State};
+        _ ->
+            Waiting1 = [{What, From} | Waiting],
+            {noreply, State#state{waiting = Waiting1}}
+    end;
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -105,7 +119,8 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({provide, What}, State = #state{pending = Pending,
-                                            provided = Provided}) ->
+                                            provided = Provided,
+                                            waiting = Waiting}) ->
     lager:info("[eplugin] ~p is now provided.", [What]),
     Provided1 = ordsets:add_element(What,  Provided),
     {Load, Pending1} = lists:partition(fun({_Path, _Name, _Modules, Config}) ->
@@ -115,7 +130,13 @@ handle_cast({provide, What}, State = #state{pending = Pending,
     lists:foreach(fun({Path, Name, Modules, Config}) ->
                           compile_plugin(Path, Name, Modules, Config)
                   end, Load),
-    {noreply, State#state{provided = Provided1, pending = Pending1}};
+    {Ready, Waiting1} = lists:partition(fun({WaitWhat, _WaitFrom}) ->
+                                            WaitWhat =:= What
+                                        end, Waiting),
+    lists:foreach(fun({_, WaitFrom}) ->
+                      gen_server:reply(WaitFrom, ok)
+                  end, Ready),
+    {noreply, State#state{provided = Provided1, pending = Pending1, waiting = Waiting1}};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

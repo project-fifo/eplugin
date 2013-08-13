@@ -14,6 +14,7 @@
          plugins/0,
          enable/1,
          provide/1,
+         wait_for_init/0,
          is_enabled/1,
          disable/1]).
 
@@ -143,6 +144,21 @@ start() ->
     application:start(sasl),
     application:start(lager),
     application:start(eplugin).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Waits until eplugin has finished starting up and has loaded all
+%% plugins whose dependencies can be filled at startup.
+%%
+%% Use this if you need to call a plugin hook during your application
+%% startup for one-off configuration or other similar uses.
+%%
+%% @spec wait_for_init() -> ok
+%% @end
+%%--------------------------------------------------------------------
+-spec wait_for_init() -> ok.
+wait_for_init() ->
+    ok = eplugin_srv:wait_until_provided(eplugin).
 
 %%--------------------------------------------------------------------
 %% @doc
