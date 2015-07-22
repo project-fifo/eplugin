@@ -10,6 +10,7 @@
          test/1, test/2, test/3, test/4,
          register/4, register/5,
          fold/2,
+         find/2,
          config/1,
          plugins/0,
          enable/1,
@@ -326,6 +327,27 @@ fold(Plugin, Acc0) ->
     lists:foldl(fun({M, F}, AccIn) ->
                         M:F(AccIn)
                 end, Acc0, callbacks(Plugin)).
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% This function runs <b>Input</b> through all callbacks for
+%% <b>Plugin</b> as returned by callbacks/1 until a callbacks result
+%% matches with {ok, Result}.
+%%
+%% @spec fold(Plugin::atom(), Data::any(), Match::any()) ->
+%%         {ok, any()} | {error, not_matced}
+%% @end
+%%--------------------------------------------------------------------
+-spec find(Plugin::atom(), Input::any()) ->
+              {ok, any()} | {error, no_match}.
+find(Plugin, Input) ->
+  find(Input, callbacks(Plugin), false).
+
+find(_, _, {ok, Result}) -> Result;
+find(_, [], _) -> {error, no_match};
+find(Input, [{M,F}|Callbacks], _) ->
+  find(Input, Callbacks, M:F(Input)).
 
 %%--------------------------------------------------------------------
 %% @doc
