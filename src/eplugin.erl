@@ -16,7 +16,8 @@
          provide/1,
          wait_for_init/0,
          is_enabled/1,
-         disable/1]).
+         disable/1,
+         reload/0]).
 
 %% This is a library we don't want xref to spam us with the exported functions.
 -ignore_xref([start/0,
@@ -28,12 +29,13 @@
               register/4, register/5,
               fold/2,
               config/1,
-              provide/1,
               plugins/0,
               enable/1,
               provide/1,
               is_enabled/1,
-              disable/1]).
+              wait_for_init/0,
+              disable/1,
+              reload/0]).
 
 -export_type([plugin_desc/0]).
 
@@ -507,6 +509,19 @@ plugins() ->
 provide(What) ->
     eplugin_srv:provide(What).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Checks the config directory for new plugins (existing plugins are
+%% NOT recompiled!
+%%
+%% @spec reload() -> ok
+%% @end
+%%--------------------------------------------------------------------
+
+-spec reload() -> ok.
+
+reload() ->
+    eplugin_srv:reload().
 
 %%%===================================================================
 %%% Internal functions

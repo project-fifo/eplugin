@@ -19,7 +19,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--export([provide/1, wait_until_provided/1, register_callbacks/2, register_callback/5]).
+-export([provide/1, wait_until_provided/1, register_callbacks/2, register_callback/5, reload/0]).
 
 -define(SERVER, ?MODULE).
 
@@ -43,6 +43,12 @@ start_link() ->
                      ok.
 provide(What) ->
     gen_server:cast(?SERVER, {provide, What}).
+
+-spec reload() ->
+                    ok.
+reload() ->
+    gen_server:cast(?SERVER, reload).
+
 
 -spec wait_until_provided(What::atom()) -> ok.
 wait_until_provided(What) ->
@@ -118,6 +124,27 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_cast(reload, State = #state{pending = Pending}) ->
+    {ok, Base} = application:get_env(plugin_dir),
+    WC = filename:join([Base, "*", "plugin.conf"]),
+    Plugins = eplugin:plugins(),
+    Configs = filelib:wildcard(WC),
+    New = lists:foldl(fun(File, Acc) ->
+                              case load_config(File) of
+                                  {ok, Path, Name, Modules, Config} ->
+                                      case lists:keyfind(Name, 2, Plugins) of
+                                          false ->
+                                              [{Path, Name, Modules, Config} | Acc];
+                                          _ ->
+                                              Acc
+                                      end;
+                                  _ ->
+                                      Acc
+                              end
+                      end, [], Configs),
+    provide(eplugin),
+    {ok, State#state{pending = Pending ++ New}};
+
 handle_cast({provide, What}, State = #state{pending = Pending,
                                             provided = Provided,
                                             waiting = Waiting}) ->
@@ -131,12 +158,13 @@ handle_cast({provide, What}, State = #state{pending = Pending,
                           compile_plugin(Path, Name, Modules, Config)
                   end, Load),
     {Ready, Waiting1} = lists:partition(fun({WaitWhat, _WaitFrom}) ->
-                                            WaitWhat =:= What
+                                                WaitWhat =:= What
                                         end, Waiting),
     lists:foreach(fun({_, WaitFrom}) ->
-                      gen_server:reply(WaitFrom, ok)
+                          gen_server:reply(WaitFrom, ok)
                   end, Ready),
     {noreply, State#state{provided = Provided1, pending = Pending1, waiting = Waiting1}};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -209,8 +237,8 @@ load_modules(Name, _Path, []) ->
 
 load_modules(Name, Path, [{M, _RegisterFor} | Modules]) ->
     File = filename:join([Path, M]),
-%    code:delete(M),
-%    code:purge(M),
+                                                %    code:delete(M),
+                                                %    code:purge(M),
     case code:load_abs(File) of
         {error, Reason} ->
             lager:error("[eplugin::~p] Failed to load module ~p(~s): ~p.", [Name, M, File, Reason]),
