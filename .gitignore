@@ -3,3 +3,4 @@ doc
 .eunit
 ebin
 deps
+_build

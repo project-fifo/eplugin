@@ -1,7 +1,7 @@
 {application, eplugin,
  [
-  {description, ""},
-  {vsn, "0.1.3"},
+  {description, "plugin provider for erlang"},
+  {vsn, "0.1.4"},
   {registered, []},
   {applications, [
                   kernel,
@@ -10,5 +10,8 @@
                   lager
                  ]},
   {mod, { eplugin_app, []}},
-  {env, [{plugin_dir, "plugins"}]}
+  {env, [{plugin_dir, "plugins"}]},
+  {contributors, ["Heinz N. Gies"]},
+  {licenses, ["CDDL"]},
+  {links, [{"Github", "https://github.com/Licenser/eplugin"}]}
  ]}.
